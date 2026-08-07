@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { db } from '../lib/firebase';
 import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -33,6 +33,14 @@ export function ReportModal({ reportedUser, reporterUser, isOpen, onClose, onUse
   const [submitted, setSubmitted] = useState(false);
   const [submittedAction, setSubmittedAction] = useState<string>('Report Submitted');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      setSubmitted(false);
+      setError('');
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 

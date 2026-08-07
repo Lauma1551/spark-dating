@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { db, auth } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -28,6 +28,15 @@ export function UserProfileModal({
   const [bio, setBio] = useState(profile.bio || '');
   const [interests, setInterests] = useState(profile.interests?.join(', ') || '');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(profile.name);
+      setBio(profile.bio || '');
+      setInterests(profile.interests?.join(', ') || '');
+      setIsEditing(false);
+    }
+  }, [isOpen, profile]);
 
   if (!isOpen) return null;
 

@@ -39,19 +39,24 @@ export function SwipeArea({ currentUser, profiles, onSwipeLeft, onSwipeRight, on
 
   return (
     <div className="relative w-full h-[580px] max-w-md mx-auto flex items-center justify-center perspective-1000 mt-4">
-      {cards.map((profile, index) => (
-        <SwipeCard 
-          key={profile.uid} 
-          profile={profile} 
-          isFront={index === cards.length - 1}
-          onSwipe={(dir) => {
-            if (dir === 'left') onSwipeLeft(profile);
-            if (dir === 'right') onSwipeRight(profile);
-            setCards(prev => prev.slice(0, -1));
-          }}
-          onReport={() => setReportingProfile(profile)}
-        />
-      ))}
+      {cards.map((profile, index) => {
+        const isFront = index === cards.length - 1;
+        const isSecondCard = index === cards.length - 2;
+        return (
+          <SwipeCard 
+            key={profile.uid} 
+            profile={profile} 
+            isFront={isFront}
+            isSecondCard={isSecondCard}
+            onSwipe={(dir) => {
+              if (dir === 'left') onSwipeLeft(profile);
+              if (dir === 'right') onSwipeRight(profile);
+              setCards(prev => prev.slice(0, -1));
+            }}
+            onReport={() => setReportingProfile(profile)}
+          />
+        );
+      })}
 
       {reportingProfile && (
         <ReportModal
@@ -69,12 +74,12 @@ export function SwipeArea({ currentUser, profiles, onSwipeLeft, onSwipeRight, on
 const SwipeCard: FC<{
   profile: UserProfile;
   isFront: boolean;
+  isSecondCard?: boolean;
   onSwipe: (dir: 'left' | 'right') => void;
   onReport: () => void;
-}> = ({ profile, isFront, onSwipe, onReport }) => {
+}> = ({ profile, isFront, isSecondCard, onSwipe, onReport }) => {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
-  const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0]);
 
   const handleDragEnd = (event: any, info: any) => {
     const offset = info.offset.x;
@@ -91,10 +96,10 @@ const SwipeCard: FC<{
       style={{
         x: isFront ? x : 0,
         rotate: isFront ? rotate : 0,
-        opacity: isFront ? 1 : 0,
-        scale: isFront ? 1 : 0.95,
-        y: isFront ? 0 : 20,
-        zIndex: isFront ? 10 : 0,
+        opacity: isFront ? 1 : (isSecondCard ? 0.85 : 0),
+        scale: isFront ? 1 : (isSecondCard ? 0.95 : 0.9),
+        y: isFront ? 0 : (isSecondCard ? 14 : 28),
+        zIndex: isFront ? 10 : (isSecondCard ? 5 : 0),
         pointerEvents: isFront ? 'auto' : 'none'
       }}
       drag={isFront ? "x" : false}
