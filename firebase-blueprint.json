@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "bio": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "interests": { "type": "array" },
+        "lastSeen": { "type": "number" },
+        "blockedUserIds": { "type": "array" },
+        "isVerified": { "type": "boolean" },
+        "verificationPhotoUrl": { "type": "string" },
+        "verifiedAt": { "type": "number" },
+        "subscriptionPlan": { "type": "string" },
+        "subscriptionExpiresAt": { "type": "number" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["uid", "name", "photoUrl", "createdAt"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "Match connection between two users",
+      "type": "object",
+      "properties": {
+        "users": { "type": "array" },
+        "createdAt": { "type": "number" },
+        "lastMessage": { "type": "string" },
+        "lastMessageTime": { "type": "number" }
+      },
+      "required": ["users", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Chat message sent between matched users",
+      "type": "object",
+      "properties": {
+        "matchId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["matchId", "senderId", "text", "createdAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Report submitted against a user for inappropriate behavior or content",
+      "type": "object",
+      "properties": {
+        "reporterId": { "type": "string" },
+        "reporterName": { "type": "string" },
+        "reportedUserId": { "type": "string" },
+        "reportedUserName": { "type": "string" },
+        "reason": { "type": "string" },
+        "details": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["reporterId", "reportedUserId", "reason", "createdAt", "status"]
+    },
+    "Block": {
+      "title": "Block",
+      "description": "Block record between a blocker and a blocked user",
+      "type": "object",
+      "properties": {
+        "blockerId": { "type": "string" },
+        "blockedId": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["blockerId", "blockedId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores individual user profile data"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "Stores match records between pairs of users"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Stores chat messages for matches"
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Stores reported inappropriate user behavior"
+    },
+    "/blocks/{blockId}": {
+      "schema": "Block",
+      "description": "Stores user block records"
+    }
+  }
+}

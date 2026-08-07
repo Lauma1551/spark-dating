@@ -1,0 +1,6 @@
+{
+  "name": "Spark Dating App",
+  "description": "An online dating application featuring real-time chat, swipe gestures, interest-based matching, and geolocation.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
