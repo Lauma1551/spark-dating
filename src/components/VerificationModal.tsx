@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
-import { db } from '../lib/firebase';
+import { db, sanitizeForFirestore } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { UserProfile } from '../types';
 import { VerifiedBadge } from './VerifiedBadge';
@@ -124,7 +124,7 @@ export function VerificationModal({ currentUser, isOpen, onClose, onVerified }: 
       };
 
       const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, updatedFields);
+      await updateDoc(userRef, sanitizeForFirestore(updatedFields));
 
       const updatedProfile: UserProfile = {
         ...currentUser,

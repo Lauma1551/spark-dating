@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { FC } from 'react';
+import type { FC, MouseEvent } from 'react';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { UserProfile } from '../types';
-import { Heart, X, Flag } from 'lucide-react';
+import { Heart, X, Flag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ReportModal } from './ReportModal';
 import { VerifiedBadge } from './VerifiedBadge';
 
@@ -29,16 +29,20 @@ export function SwipeArea({ currentUser, profiles, onSwipeLeft, onSwipeRight, on
 
   if (cards.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-zinc-500">
-        <Heart className="w-16 h-16 mb-4 text-zinc-300 dark:text-zinc-700" />
-        <p className="text-lg font-medium">No more potential matches nearby.</p>
-        <p className="text-sm">Check back later!</p>
+      <div className="flex flex-col items-center justify-center h-full text-zinc-500 p-8 text-center my-auto">
+        <div className="w-20 h-20 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mb-4">
+          <Heart className="w-10 h-10 animate-pulse fill-rose-500/20" />
+        </div>
+        <p className="text-xl font-extrabold text-zinc-800 dark:text-slate-100">No more profiles nearby</p>
+        <p className="text-xs text-zinc-500 dark:text-slate-400 mt-1 max-w-xs">
+          You've seen all compatible members in your discovery range. Check back soon or broaden your settings!
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-[580px] max-w-md mx-auto flex items-center justify-center perspective-1000 mt-4">
+    <div className="relative w-full h-[580px] max-w-md mx-auto flex items-center justify-center perspective-1000 my-auto px-4">
       {cards.map((profile, index) => {
         const isFront = index === cards.length - 1;
         const isSecondCard = index === cards.length - 2;
@@ -80,6 +84,12 @@ const SwipeCard: FC<{
 }> = ({ profile, isFront, isSecondCard, onSwipe, onReport }) => {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  const allPhotos = [
+    profile.photoUrl || profile.profilePhotoUrl,
+    ...(profile.additionalPhotoUrls || [])
+  ].filter(Boolean) as string[];
 
   const handleDragEnd = (event: any, info: any) => {
     const offset = info.offset.x;
@@ -90,9 +100,23 @@ const SwipeCard: FC<{
     }
   };
 
+  const nextPhoto = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (photoIndex < allPhotos.length - 1) {
+      setPhotoIndex(photoIndex + 1);
+    }
+  };
+
+  const prevPhoto = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (photoIndex > 0) {
+      setPhotoIndex(photoIndex - 1);
+    }
+  };
+
   return (
     <motion.div
-      className={`absolute w-full h-full bg-white dark:bg-[#1A1A1E] rounded-[40px] shadow-2xl border border-zinc-200 dark:border-white/10 overflow-hidden cursor-grab active:cursor-grabbing group`}
+      className={`absolute w-full h-full bg-white dark:bg-[#1A1A1E] rounded-[40px] shadow-2xl border border-zinc-200 dark:border-white/10 overflow-hidden cursor-grab active:cursor-grabbing group select-none`}
       style={{
         x: isFront ? x : 0,
         rotate: isFront ? rotate : 0,
@@ -108,16 +132,58 @@ const SwipeCard: FC<{
       initial={false}
       transition={{ duration: 0.3 }}
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/90 z-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/95 z-10 pointer-events-none" />
+      
+      {/* Active Photo */}
       <img 
-        src={profile.photoUrl} 
+        src={allPhotos[photoIndex] || profile.photoUrl} 
         alt={profile.name} 
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none" 
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none transition-all duration-300" 
       />
+
+      {/* Story-style photo progress bars */}
+      {allPhotos.length > 1 && (
+        <div className="absolute top-4 left-4 right-4 z-20 flex gap-1.5">
+          {allPhotos.map((_, idx) => (
+            <div
+              key={idx}
+              className={`h-1 flex-1 rounded-full transition-all ${
+                idx === photoIndex ? 'bg-white shadow' : 'bg-white/30'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Photo navigation tap zones */}
+      {isFront && allPhotos.length > 1 && (
+        <div className="absolute top-0 left-0 right-0 h-1/2 z-20 flex justify-between pointer-events-auto">
+          <div
+            onClick={prevPhoto}
+            className="w-1/2 h-full cursor-pointer opacity-0 hover:opacity-100 flex items-center pl-2 transition"
+          >
+            {photoIndex > 0 && (
+              <div className="p-1.5 rounded-full bg-black/40 text-white backdrop-blur-sm">
+                <ChevronLeft className="w-4 h-4" />
+              </div>
+            )}
+          </div>
+          <div
+            onClick={nextPhoto}
+            className="w-1/2 h-full cursor-pointer opacity-0 hover:opacity-100 flex items-center justify-end pr-2 transition"
+          >
+            {photoIndex < allPhotos.length - 1 && (
+              <div className="p-1.5 rounded-full bg-black/40 text-white backdrop-blur-sm">
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Top action overlay for report button */}
       {isFront && (
-        <div className="absolute top-5 right-5 z-20 pointer-events-auto">
+        <div className="absolute top-8 right-5 z-30 pointer-events-auto">
           <button
             type="button"
             onClick={(e) => {
@@ -133,54 +199,67 @@ const SwipeCard: FC<{
       )}
       
       {/* Content Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-8 z-20 text-white pointer-events-none">
-          <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-3xl font-bold">{profile.name}</h2>
+      <div className="absolute bottom-0 left-0 right-0 p-7 z-20 text-white pointer-events-none">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              {profile.firstName || profile.name}{profile.age ? `, ${profile.age}` : ''}
+            </h2>
             {profile.isVerified && <VerifiedBadge size="md" />}
           </div>
+
+          {(profile.gender || profile.location?.city || profile.preferences?.lookingFor) && (
+            <p className="text-xs text-white/90 font-medium mb-2.5 flex items-center gap-2">
+              {profile.gender && <span>{profile.gender}</span>}
+              {profile.location?.city && (
+                <>
+                  <span>•</span>
+                  <span>{profile.location.city}</span>
+                </>
+              )}
+              {profile.preferences?.lookingFor && (
+                <>
+                  <span>•</span>
+                  <span className="text-rose-300 font-semibold">{profile.preferences.lookingFor}</span>
+                </>
+              )}
+            </p>
+          )}
           
-          <p className="text-slate-300 text-sm mb-4 leading-relaxed line-clamp-2">
-            {profile.bio || "No bio available."}
+          <p className="text-slate-200 text-xs sm:text-sm mb-3.5 leading-relaxed line-clamp-2">
+            {profile.bio || "Looking for great conversations and meaningful connection."}
           </p>
 
-          <div className="flex flex-wrap gap-2 mb-6">
-            {profile.interests?.slice(0, 3).map(interest => (
-              <span key={interest} className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-medium">
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {profile.interests?.slice(0, 4).map(interest => (
+              <span key={interest} className="px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full text-[11px] font-medium">
                 {interest}
               </span>
             ))}
-            {(profile.interests?.length || 0) > 3 && (
-              <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium">
-                +{(profile.interests?.length || 0) - 3}
+            {(profile.interests?.length || 0) > 4 && (
+              <span className="px-2 py-1 bg-white/10 backdrop-blur-md rounded-full text-[11px] font-medium">
+                +{(profile.interests?.length || 0) - 4}
               </span>
             )}
           </div>
-          
-          {profile.location && (
-             <div className="flex items-center gap-1 text-xs text-emerald-400 font-semibold mb-6">
-               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-               Nearby
-             </div>
-          )}
       </div>
 
+      {/* Swipe Feedback badges (Like / Nope) */}
       {isFront && (
         <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 flex justify-between px-6 pointer-events-none z-30">
            <motion.div 
-             className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-xl"
-             style={{ opacity: useTransform(x, [-100, -50], [1, 0]) }}
+             className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-xl border border-rose-200"
+             style={{ opacity: useTransform(x, [-100, -40], [1, 0]) }}
            >
              <X className="w-8 h-8" />
            </motion.div>
            <motion.div 
              className="w-16 h-16 bg-rose-500 rounded-full flex items-center justify-center text-white shadow-xl"
-             style={{ opacity: useTransform(x, [50, 100], [0, 1]) }}
+             style={{ opacity: useTransform(x, [40, 100], [0, 1]) }}
            >
-             <Heart className="w-8 h-8" />
+             <Heart className="w-8 h-8 fill-current" />
            </motion.div>
         </div>
       )}
     </motion.div>
   );
 }
-
